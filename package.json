@@ -16,7 +16,7 @@
     "@supabase/supabase-js": "^2.46.1",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
-    "nuxt": "^3.14.0",
+    "nuxt": "^3.14.159",
     "trpc-nuxt": "^0.10.22",
     "vue": "latest",
     "vue-router": "latest",
@@ -28,4 +28,3 @@
     "tailwindcss": "^3.4.14"
   }
 }
-
