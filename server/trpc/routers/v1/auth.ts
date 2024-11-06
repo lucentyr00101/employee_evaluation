@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { router } from '@/server/trpc/trpc'
 import { guestProcedure } from "~/server/trpc/procedures/authorized";
+import { serverSupabaseClient } from "#supabase/server";
 
 export default router({
   login: guestProcedure
@@ -10,8 +11,12 @@ export default router({
         password: z.string().min(8, 'Must be at least 8 characters')
       }),
     )
-    .query(({ input }) => {
-      console.log({input})
-      return input
+    .mutation(async ({ input, ctx }): Promise<any> => {
+      const client = await serverSupabaseClient(ctx.event)
+      const { data } = await client.auth.signInWithPassword({
+        email: input.email,
+        password: input.password,
+      })
+      return data
     }),
 })

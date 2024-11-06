@@ -23,11 +23,14 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { FormSubmitEvent } from "#ui/types";
-import { createClient } from "@supabase/supabase-js";
+import { useSessionStore } from "~/store/session";
 
 type Schema = z.output<typeof schema>
 
 const { $client } = useNuxtApp()
+const router = useRouter();
+
+const { setSession } = useSessionStore();
 
 const form = reactive({
   email: '',
@@ -45,7 +48,13 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
       email: form.email,
       password: form.password
     }
-    await $client.v1.auth.login.query(payload)
+    const res = await $client.v1.auth.login.mutate(payload)
+    setSession({
+      accessToken: res.session.access_token,
+      refreshToken: res.session.refresh_token,
+      expiresAt: res.session.expires_at
+    })
+    router.replace('/')
   } catch (e) {
     console.error(e)
   }

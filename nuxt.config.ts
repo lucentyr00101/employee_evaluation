@@ -35,5 +35,5 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ['@nuxt/ui', '@nuxtjs/supabase']
+  modules: ['@nuxt/ui', '@nuxtjs/supabase', '@pinia/nuxt']
 })
