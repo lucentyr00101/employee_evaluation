@@ -1,6 +1,6 @@
 import { router } from '@/server/trpc/trpc'
-import countries from './countries'
+import auth from './auth'
 
 export default router({
-  countries
+  auth
 })
