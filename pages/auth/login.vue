@@ -34,19 +34,21 @@ const form = reactive({
   password: ''
 })
 
-const config = useRuntimeConfig();
-
 const schema = z.object({
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Must be at least 8 characters')
 })
 
 const onSubmit = async (event: FormSubmitEvent<Schema>) => {
-  const payload = {
-    email: form.email,
-    password: form.password
+  try {
+    const payload = {
+      email: form.email,
+      password: form.password
+    }
+    await $client.v1.auth.login.query(payload)
+  } catch (e) {
+    console.error(e)
   }
-  await $client.v1.auth.login.query(payload)
 }
 
 </script>

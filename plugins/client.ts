@@ -1,6 +1,6 @@
 /** tRPC Client Plugin */
 
-import { createTRPCNuxtClient, httpBatchLink } from 'trpc-nuxt/client'
+import { createTRPCNuxtClient, httpBatchLink, httpLink } from 'trpc-nuxt/client'
 import type { AppRouter } from '~/server/trpc/routers'
 
 export default defineNuxtPlugin(() => {
@@ -9,6 +9,14 @@ export default defineNuxtPlugin(() => {
    * built on top of `useAsyncData`.
    */
   const client = createTRPCNuxtClient<AppRouter>({
+    links: [
+      httpLink({
+        url: '/api/trpc',
+      }),
+    ],
+  })
+
+  const batchClient = createTRPCNuxtClient<AppRouter>({
     links: [
       httpBatchLink({
         url: '/api/trpc',
@@ -19,6 +27,7 @@ export default defineNuxtPlugin(() => {
   return {
     provide: {
       client,
+      batchClient
     },
   }
 })
