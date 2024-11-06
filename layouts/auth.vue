@@ -1,4 +1,5 @@
 <template>
-  <h1>Auth layout</h1>
-  <NuxtPage />
+  <div class="bg-dark w-dvw h-svh">
+    <NuxtPage />
+  </div>
 </template>
