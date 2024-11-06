@@ -23,21 +23,30 @@
 <script setup lang="ts">
 import { z } from "zod";
 import type { FormSubmitEvent } from "#ui/types";
+import { createClient } from "@supabase/supabase-js";
 
 type Schema = z.output<typeof schema>
+
+const { $client } = useNuxtApp()
 
 const form = reactive({
   email: '',
   password: ''
 })
 
+const config = useRuntimeConfig();
+
 const schema = z.object({
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Must be at least 8 characters')
 })
 
-const onSubmit = (event: FormSubmitEvent<Schema>) => {
-  console.log(event, form.email, form.password)
+const onSubmit = async (event: FormSubmitEvent<Schema>) => {
+  const payload = {
+    email: form.email,
+    password: form.password
+  }
+  await $client.v1.auth.login.query(payload)
 }
 
 </script>

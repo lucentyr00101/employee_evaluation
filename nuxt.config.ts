@@ -18,9 +18,22 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       SUPABASE_URL: process.env.SUPABASE_URL ?? '',
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? ''
+      SUPABASE_KEY: process.env.SUPABASE_KEY ?? '',
+      SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD ?? '',
+      SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ?? '',
     }
   },
 
-  modules: ['@nuxt/ui']
+  supabase: {
+    redirect: false,
+    clientOptions: {
+      auth: {
+        detectSessionInUrl: false,
+        autoRefreshToken: true,
+        flowType: 'implicit',
+      },
+    },
+  },
+
+  modules: ['@nuxt/ui', '@nuxtjs/supabase']
 })
