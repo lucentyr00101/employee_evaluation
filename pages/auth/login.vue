@@ -33,8 +33,8 @@ const router = useRouter();
 const { setSession } = useSessionStore();
 
 const form = reactive({
-  email: '',
-  password: ''
+  email: 'admin@email.com',
+  password: 'password'
 })
 
 const schema = z.object({
@@ -54,7 +54,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
       refreshToken: res.session.refresh_token,
       expiresAt: res.session.expires_at
     })
-    router.replace('/')
+    await router.replace('/')
   } catch (e) {
     console.error(e)
   }
