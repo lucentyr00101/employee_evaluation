@@ -1,8 +1,9 @@
 <template>
-  <NuxtLayout name="auth">
-    <NuxtPage/>
-  </NuxtLayout>
+  <NuxtPage/>
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'auth'
+})
 </script>
