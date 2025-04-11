@@ -10,21 +10,21 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "^2.19.2",
-    "@nuxtjs/supabase": "^1.4.1",
+    "@nuxt/ui": "^2.21.1",
+    "@nuxtjs/supabase": "^1.5.0",
     "@pinia/nuxt": "^0.7.0",
-    "@supabase/supabase-js": "^2.46.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
-    "nuxt": "^3.14.159",
+    "nuxt": "^3.16.2",
     "trpc-nuxt": "^0.10.22",
     "vue": "latest",
     "vue-router": "latest",
-    "zod": "^3.23.8"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14"
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17"
   }
 }

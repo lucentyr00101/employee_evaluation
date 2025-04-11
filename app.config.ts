@@ -19,6 +19,10 @@ export default defineAppConfig({
         ghost: 'duration-300',
         link: 'duration-300',
       }
+    },
+    notifications: {
+      // Show toasts at the top right of the screen
+      position: 'top-0 right-0'
     }
   }
 })
