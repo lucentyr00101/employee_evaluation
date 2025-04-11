@@ -5,20 +5,20 @@ import { middleware } from '~/server/trpc/trpc'
 export const authMiddleware = middleware(async opts => {
   const { ctx } = opts
 
-  if (ctx.authorization === undefined) {
+  if (!ctx.authorization) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
-      message: 'NO_AUTH',
+      message: 'Authentication required. Please log in.',
     })
   }
 
   const client = await serverSupabaseClient(ctx.event)
-  const { data } = await client.auth.getUser(ctx.authorization)
+  const { data, error } = await client.auth.getUser(ctx.authorization)
 
-  if (data.user === null) {
+  if (error || !data.user) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
-      message: 'Invalid access, please login.',
+      message: 'Invalid or expired session. Please log in again.',
     })
   }
 

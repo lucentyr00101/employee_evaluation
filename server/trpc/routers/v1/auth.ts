@@ -1,18 +1,37 @@
 import { z } from "zod";
 import { router } from '@/server/trpc/trpc'
-import { guestProcedure } from "~/server/trpc/procedures/authorized";
+import { authorizedProcedure, guestProcedure, publicProcedure } from "~/server/trpc/procedures/authorized";
 import { serverSupabaseClient } from "#supabase/server";
 import { TRPCError } from '@trpc/server';
+import { Context } from '~/server/trpc/context';
+import type { inferProcedureInput } from '@trpc/server';
+
+// Define input types
+type LoginInput = z.infer<typeof loginSchema>;
+type RegisterInput = z.infer<typeof registerSchema>;
+
+// Define validation schemas
+const loginSchema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Must be at least 8 characters')
+});
+
+const registerSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email'),
+  password: z.string()
+    .min(8, 'Must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number')
+});
 
 export default router({
+  // Login endpoint - accessible only to guests (non-authenticated users)
   login: guestProcedure
-    .input(
-      z.object({
-        email: z.string().email('Invalid email'),
-        password: z.string().min(8, 'Must be at least 8 characters')
-      }),
-    )
-    .mutation(async ({ input, ctx }): Promise<any> => {
+    .input(loginSchema)
+    .mutation(async ({ input, ctx }: { input: LoginInput, ctx: Context }): Promise<any> => {
       const client = await serverSupabaseClient(ctx.event)
       const { data, error } = await client.auth.signInWithPassword({
         email: input.email,
@@ -32,20 +51,10 @@ export default router({
       }
     }),
 
+  // Register endpoint - accessible only to guests (non-authenticated users)
   register: guestProcedure
-    .input(
-      z.object({
-        firstName: z.string().min(1, 'First name is required'),
-        lastName: z.string().min(1, 'Last name is required'),
-        email: z.string().email('Invalid email'),
-        password: z.string()
-          .min(8, 'Must be at least 8 characters')
-          .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
-          .regex(/[a-z]/, 'Must contain at least one lowercase letter')
-          .regex(/[0-9]/, 'Must contain at least one number')
-      }),
-    )
-    .mutation(async ({ input, ctx }): Promise<any> => {
+    .input(registerSchema)
+    .mutation(async ({ input, ctx }: { input: RegisterInput, ctx: Context }): Promise<any> => {
       try {
         const client = await serverSupabaseClient(ctx.event)
         const { data: authData, error } = await client.auth.signUp({
@@ -88,25 +97,12 @@ export default router({
       }
     }),
 
-  getMe: guestProcedure
-    .query(async ({ ctx }) => {
+  // GetMe endpoint - accessible only to authenticated users
+  getMe: authorizedProcedure
+    .query(async ({ ctx }: { ctx: Context & { user: any } }) => {
       try {
-        const client = await serverSupabaseClient(ctx.event);
-        const { data: { user }, error } = await client.auth.getUser();
-
-        if (error) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: error.message
-          });
-        }
-
-        if (!user) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'User not found'
-          });
-        }
+        // User is already authenticated via middleware
+        const user = ctx.user;
 
         return {
           user: {
@@ -126,8 +122,9 @@ export default router({
       }
     }),
 
-  logout: guestProcedure
-    .mutation(async ({ ctx }) => {
+  // Logout endpoint - accessible only to authenticated users
+  logout: authorizedProcedure
+    .mutation(async ({ ctx }: { ctx: Context & { user: any } }) => {
       try {
         const client = await serverSupabaseClient(ctx.event);
         const { error } = await client.auth.signOut();
