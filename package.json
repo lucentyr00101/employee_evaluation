@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "setup-mock-data": "tsx server/db/setup-mock-data.ts"
   },
   "dependencies": {
     "@nuxt/ui": "^2.21.1",
@@ -24,7 +25,9 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "dotenv": "^16.5.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3"
   }
 }
