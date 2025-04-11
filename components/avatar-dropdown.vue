@@ -8,12 +8,6 @@
         ring: 'ring-2 ring-white/20'
       }"
     />
-    <template #item="{ item }">
-      <div class="flex items-center gap-2 w-full" @click="item.click">
-        <UIcon :name="item.icon" class="w-4 h-4" />
-        {{ item.label }}
-      </div>
-    </template>
   </UDropdown>
 </template>
 
@@ -21,61 +15,41 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSessionStore } from "~/store/session";
+import { useAuth } from "~/composables/useAuth";
 
 const router = useRouter();
-const { $client } = useNuxtApp();
-const { isLoggedIn, userFullName, clearSession } = useSessionStore();
-const toast = useToast();
+const sessionStore = useSessionStore();
+const { isLoggedIn } = sessionStore;
+const { logout } = useAuth();
 
 const userInitials = computed(() => {
-  const name = userFullName.value;
-  if (!name) return '?';
-  return name
+  if (!sessionStore.userFullName) return '?';
+  return sessionStore.userFullName
     .split(' ')
-    .map(part => part?.[0] || '')
+    .map((part: string) => part?.[0] || '')
     .join('')
     .toUpperCase()
     .slice(0, 2);
 });
 
-const handleLogout = async () => {
-  try {
-    await $client.v1.auth.logout.mutate();
-    clearSession();
-    toast.add({
-      title: 'Logged Out',
-      description: 'You have been successfully logged out.',
-      icon: 'i-heroicons-check-circle',
-      color: 'green'
-    });
-    await router.push('/auth/login');
-  } catch (error: any) {
-    console.error('Logout error:', error);
-    toast.add({
-      title: 'Logout Failed',
-      description: error.message || 'Failed to logout. Please try again.',
-      icon: 'i-heroicons-x-circle',
-      color: 'red'
-    });
-  }
-};
-
 const menuItems = [
-  {
-    label: 'Profile',
-    icon: 'i-heroicons-user',
-    click: () => router.push('/profile')
-  },
-  {
-    label: 'Settings',
-    icon: 'i-heroicons-cog-6-tooth',
-    click: () => router.push('/profile/settings')
-  },
-  {
-    label: 'Logout',
-    icon: 'i-heroicons-arrow-left-on-rectangle',
-    click: handleLogout
-  }
+  [
+    {
+      label: 'Profile',
+      icon: 'i-heroicons-user',
+      click: () => router.push('/profile')
+    },
+    {
+      label: 'Settings',
+      icon: 'i-heroicons-cog-6-tooth',
+      click: () => router.push('/profile/settings')
+    },
+    {
+      label: 'Logout',
+      icon: 'i-heroicons-arrow-left-on-rectangle',
+      click: () => logout()
+    }
+  ]
 ];
 
 const dropdownUI = {
@@ -87,6 +61,9 @@ const dropdownUI = {
   background: 'bg-white dark:bg-gray-900',
   ring: 'ring-1 ring-gray-200 dark:ring-gray-800',
   rounded: 'rounded-lg',
-  shadow: 'shadow-lg'
+  shadow: 'shadow-lg',
+  popper: {
+    strategy: 'fixed'
+  }
 };
 </script>
