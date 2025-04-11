@@ -130,11 +130,14 @@ const emit = defineEmits<{
 }>();
 
 // Add watch to reset form when modal closes
-watch(() => props.modelValue, (newValue) => {
-  if (!newValue) {
-    resetForm();
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (!newValue) {
+      resetForm();
+    }
   }
-});
+);
 
 // Define schema for form validation
 const schema = z.object({
