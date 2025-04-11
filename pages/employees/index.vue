@@ -197,7 +197,7 @@
             <!-- Department -->
             <UFormGroup label="Department" name="departmentId">
               <USelectMenu
-                v-model="form.departmentId"
+                v-model="form.departmentId as any"
                 :options="departmentOptions"
                 placeholder="Select a department"
               />
@@ -216,7 +216,7 @@
             <!-- Manager -->
             <UFormGroup label="Manager" name="managerId">
               <USelectMenu
-                v-model="form.managerId"
+                v-model="form.managerId as any"
                 :options="managerOptions"
                 placeholder="Select a manager"
               />
@@ -238,7 +238,7 @@
             <UTextarea
               v-model="form.bio"
               placeholder="Enter employee bio"
-              rows="3"
+              :rows="3"
             />
           </UFormGroup>
 
@@ -259,143 +259,12 @@
       </UCard>
     </UModal>
 
-    <!-- Add New Employee Modal -->
-    <UModal v-model="isAddModalOpen" :ui="{ width: 'md:max-w-2xl' }">
-      <UCard
-        :ui="{
-          ring: '',
-          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
-        }"
-      >
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3
-              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
-            >
-              Add New Employee
-            </h3>
-            <UButton
-              color="gray"
-              variant="ghost"
-              icon="i-heroicons-x-mark"
-              class="-my-1"
-              aria-label="Close"
-              @click="isAddModalOpen = false"
-            />
-          </div>
-        </template>
-
-        <UForm
-          :schema="newEmployeeSchema"
-          :state="newEmployeeForm"
-          @submit="submitNewEmployeeForm"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <!-- First Name -->
-            <UFormGroup label="First Name" name="firstName" required>
-              <UInput
-                v-model="newEmployeeForm.firstName"
-                placeholder="Enter first name"
-              />
-            </UFormGroup>
-
-            <!-- Last Name -->
-            <UFormGroup label="Last Name" name="lastName" required>
-              <UInput
-                v-model="newEmployeeForm.lastName"
-                placeholder="Enter last name"
-              />
-            </UFormGroup>
-
-            <!-- Email -->
-            <UFormGroup label="Email" name="email" required>
-              <UInput
-                v-model="newEmployeeForm.email"
-                type="email"
-                placeholder="Enter email address"
-              />
-            </UFormGroup>
-
-            <!-- Department -->
-            <UFormGroup label="Department" name="departmentId">
-              <USelectMenu
-                v-model="newEmployeeForm.departmentId"
-                :options="departmentOptions"
-                placeholder="Select a department"
-              />
-            </UFormGroup>
-
-            <!-- Job Title -->
-            <UFormGroup label="Job Title" name="jobTitle">
-              <UInput
-                v-model="newEmployeeForm.jobTitle"
-                placeholder="Enter job title"
-              />
-            </UFormGroup>
-
-            <!-- Hire Date -->
-            <UFormGroup label="Hire Date" name="hireDate">
-              <UInput v-model="newEmployeeForm.hireDate" type="date" />
-            </UFormGroup>
-
-            <!-- Manager -->
-            <UFormGroup label="Manager" name="managerId">
-              <USelectMenu
-                v-model="newEmployeeForm.managerId"
-                :options="managerOptions"
-                placeholder="Select a manager"
-              />
-            </UFormGroup>
-
-            <!-- Phone -->
-            <UFormGroup label="Phone" name="phone">
-              <UInput
-                v-model="newEmployeeForm.phone"
-                placeholder="Enter phone number"
-              />
-            </UFormGroup>
-
-            <!-- Address -->
-            <UFormGroup label="Address" name="address">
-              <UInput
-                v-model="newEmployeeForm.address"
-                placeholder="Enter address"
-              />
-            </UFormGroup>
-          </div>
-
-          <!-- Bio -->
-          <UFormGroup label="Bio" name="bio">
-            <UTextarea
-              v-model="newEmployeeForm.bio"
-              placeholder="Enter employee bio"
-              rows="3"
-            />
-          </UFormGroup>
-
-          <div class="mt-4 text-sm text-gray-500">
-            <p>
-              A default password of "Password123" will be set. The employee will
-              be prompted to change it on first login.
-            </p>
-          </div>
-
-          <div class="flex justify-end space-x-2 mt-6">
-            <UButton
-              type="button"
-              color="gray"
-              variant="ghost"
-              @click="isAddModalOpen = false"
-            >
-              Cancel
-            </UButton>
-            <UButton type="submit" color="primary" :loading="isAddSubmitting">
-              Create Employee
-            </UButton>
-          </div>
-        </UForm>
-      </UCard>
-    </UModal>
+    <EmployeesAddEmployeeModal
+      v-model="isAddModalOpen"
+      :departments="departments"
+      :managers="managers"
+      @submit="handleNewEmployee"
+    />
   </div>
 </template>
 
@@ -418,20 +287,6 @@ const schema = z.object({
   address: z.string().optional().nullable(),
 });
 
-// Define schema for new employee form validation
-const newEmployeeSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  departmentId: z.string().optional().nullable(),
-  jobTitle: z.string().optional().nullable(),
-  hireDate: z.string().optional().nullable(),
-  managerId: z.string().optional().nullable(),
-  bio: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-});
-
 // Access tRPC client
 const { $client } = useNuxtApp();
 const toast = useToast();
@@ -444,26 +299,11 @@ const isLoading = ref(true);
 const isModalOpen = ref(false);
 const isAddModalOpen = ref(false);
 const isSubmitting = ref(false);
-const isAddSubmitting = ref(false);
 const selectedEmployee = ref<any>(null);
 
 // Form state
 const form = reactive({
   id: "",
-  departmentId: null as string | null,
-  jobTitle: "",
-  hireDate: "",
-  managerId: null as string | null,
-  bio: "",
-  phone: "",
-  address: "",
-});
-
-// New employee form state
-const newEmployeeForm = reactive({
-  firstName: "",
-  lastName: "",
-  email: "",
   departmentId: null as string | null,
   jobTitle: "",
   hireDate: "",
@@ -546,20 +386,6 @@ async function fetchManagers() {
 
 // Open add employee modal
 function openAddEmployeeModal() {
-  // Reset form
-  Object.assign(newEmployeeForm, {
-    firstName: "",
-    lastName: "",
-    email: "",
-    departmentId: null,
-    jobTitle: "",
-    hireDate: "",
-    managerId: null,
-    bio: "",
-    phone: "",
-    address: "",
-  });
-
   isAddModalOpen.value = true;
 }
 
@@ -618,23 +444,10 @@ async function submitForm() {
   }
 }
 
-// Submit form to create new employee
-async function submitNewEmployeeForm() {
-  isAddSubmitting.value = true;
-
+// Handle new employee submission
+async function handleNewEmployee(employeeData: any) {
   try {
-    await $client.v1.employees.create.mutate({
-      firstName: newEmployeeForm.firstName,
-      lastName: newEmployeeForm.lastName,
-      email: newEmployeeForm.email,
-      departmentId: newEmployeeForm.departmentId,
-      jobTitle: newEmployeeForm.jobTitle,
-      hireDate: newEmployeeForm.hireDate,
-      managerId: newEmployeeForm.managerId,
-      bio: newEmployeeForm.bio,
-      phone: newEmployeeForm.phone,
-      address: newEmployeeForm.address,
-    });
+    await $client.v1.employees.create.mutate(employeeData);
 
     toast.add({
       title: "Success",
@@ -642,9 +455,8 @@ async function submitNewEmployeeForm() {
       color: "green",
     });
 
-    // Close modal and refresh data
-    isAddModalOpen.value = false;
     await fetchEmployees();
+    isAddModalOpen.value = false; // Only close on success
   } catch (error: any) {
     console.error("Error creating new employee:", error);
     toast.add({
@@ -652,8 +464,7 @@ async function submitNewEmployeeForm() {
       description: error.message || "Failed to create new employee",
       color: "red",
     });
-  } finally {
-    isAddSubmitting.value = false;
+    throw error; // Re-throw the error to prevent the modal from closing
   }
 }
 

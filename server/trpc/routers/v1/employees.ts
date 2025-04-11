@@ -1,15 +1,83 @@
 import { z } from "zod";
 import { router } from "@/server/trpc/trpc";
 import { authorizedProcedure } from "~/server/trpc/procedures/authorized";
-import { serverSupabaseClient } from "#supabase/server";
+import {
+  serverSupabaseClient,
+  serverSupabaseServiceRole,
+} from "#supabase/server";
 import { TRPCError } from "@trpc/server";
+
+// Define database types
+interface Database {
+  public: {
+    Tables: {
+      employee_profiles: {
+        Row: EmployeeProfile;
+        Insert: {
+          id: string;
+          department_id?: string | null;
+          job_title?: string | null;
+          hire_date?: string | null;
+          manager_id?: string | null;
+          bio?: string | null;
+          phone?: string | null;
+          address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      employee_details: {
+        Row: EmployeeDetails;
+      };
+    };
+    Views: {
+      employee_details: {
+        Row: EmployeeDetails;
+      };
+    };
+  };
+}
+
+interface EmployeeProfile {
+  id: string;
+  department_id: string | null;
+  job_title: string | null;
+  hire_date: string | null;
+  manager_id: string | null;
+  bio: string | null;
+  phone: string | null;
+  address: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface EmployeeDetails {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  department_id: string | null;
+  department_name: string | null;
+  job_title: string | null;
+  hire_date: string | null;
+  manager_id: string | null;
+  bio: string | null;
+  phone: string | null;
+  address: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 // Define validation schemas
 const updateEmployeeProfileSchema = z.object({
   id: z.string().uuid("Invalid employee ID"),
   departmentId: z.string().uuid("Invalid department ID").optional().nullable(),
   jobTitle: z.string().optional().nullable(),
-  hireDate: z.string().optional().nullable(),
+  hireDate: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => val || null),
   managerId: z.string().uuid("Invalid manager ID").optional().nullable(),
   bio: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
@@ -22,7 +90,11 @@ const createEmployeeSchema = z.object({
   email: z.string().email("Invalid email address"),
   departmentId: z.string().uuid("Invalid department ID").optional().nullable(),
   jobTitle: z.string().optional().nullable(),
-  hireDate: z.string().optional().nullable(),
+  hireDate: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => val || null),
   managerId: z.string().uuid("Invalid manager ID").optional().nullable(),
   bio: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
@@ -35,11 +107,11 @@ export default router({
     try {
       const client = await serverSupabaseClient(ctx.event);
 
-      // Query the employee_details view which joins auth.users with employee_profiles
       const { data, error } = await client
         .from("employee_details")
         .select("*")
-        .order("last_name");
+        .order("last_name")
+        .returns<EmployeeDetails[]>();
 
       if (error) {
         throw new TRPCError({
@@ -65,12 +137,12 @@ export default router({
       try {
         const client = await serverSupabaseClient(ctx.event);
 
-        // Query the employee_details view
         const { data, error } = await client
           .from("employee_details")
           .select("*")
           .eq("id", input.id)
-          .single();
+          .single()
+          .returns<EmployeeDetails>();
 
         if (error) {
           throw new TRPCError({
@@ -94,14 +166,14 @@ export default router({
     .input(updateEmployeeProfileSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const client = await serverSupabaseClient(ctx.event);
+        const client = await serverSupabaseClient<Database>(ctx.event);
 
-        // Check if profile exists first
         const { data: existingProfile } = await client
           .from("employee_profiles")
           .select("id")
           .eq("id", input.id)
-          .maybeSingle();
+          .maybeSingle()
+          .returns<Pick<EmployeeProfile, "id">>();
 
         let result;
 
@@ -118,7 +190,7 @@ export default router({
               phone: input.phone,
               address: input.address,
               updated_at: new Date().toISOString(),
-            })
+            } satisfies Partial<Database["public"]["Tables"]["employee_profiles"]["Insert"]>)
             .eq("id", input.id)
             .select()
             .single();
@@ -135,18 +207,16 @@ export default router({
           // Create new profile
           const { data, error } = await client
             .from("employee_profiles")
-            .insert([
-              {
-                id: input.id,
-                department_id: input.departmentId,
-                job_title: input.jobTitle,
-                hire_date: input.hireDate,
-                manager_id: input.managerId,
-                bio: input.bio,
-                phone: input.phone,
-                address: input.address,
-              },
-            ])
+            .insert({
+              id: input.id,
+              department_id: input.departmentId,
+              job_title: input.jobTitle,
+              hire_date: input.hireDate,
+              manager_id: input.managerId,
+              bio: input.bio,
+              phone: input.phone,
+              address: input.address,
+            } satisfies Database["public"]["Tables"]["employee_profiles"]["Insert"])
             .select()
             .single();
 
@@ -178,7 +248,10 @@ export default router({
       const { data, error } = await client
         .from("employee_details")
         .select("id, first_name, last_name, email")
-        .order("last_name");
+        .order("last_name")
+        .returns<
+          Pick<EmployeeDetails, "id" | "first_name" | "last_name" | "email">[]
+        >();
 
       if (error) {
         throw new TRPCError({
@@ -208,19 +281,11 @@ export default router({
     .input(createEmployeeSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const client = await serverSupabaseClient(ctx.event);
-        const adminClient = client.auth.admin;
-
-        if (!adminClient) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You do not have permission to create users",
-          });
-        }
+        const client = await serverSupabaseServiceRole<Database>(ctx.event);
 
         // Step 1: Create user in auth system with default password
         const { data: userData, error: userError } =
-          await adminClient.createUser({
+          await client.auth.admin.createUser({
             email: input.email,
             password: "Password123", // Default password
             email_confirm: true, // Auto-confirm email
@@ -251,24 +316,22 @@ export default router({
         // Step 2: Create employee profile
         const { data: profileData, error: profileError } = await client
           .from("employee_profiles")
-          .insert([
-            {
-              id: userId,
-              department_id: input.departmentId,
-              job_title: input.jobTitle,
-              hire_date: input.hireDate,
-              manager_id: input.managerId,
-              bio: input.bio,
-              phone: input.phone,
-              address: input.address,
-            },
-          ])
+          .insert({
+            id: userId,
+            department_id: input.departmentId,
+            job_title: input.jobTitle,
+            hire_date: input.hireDate,
+            manager_id: input.managerId,
+            bio: input.bio,
+            phone: input.phone,
+            address: input.address,
+          } satisfies Database["public"]["Tables"]["employee_profiles"]["Insert"])
           .select()
           .single();
 
         if (profileError) {
           // If profile creation fails, attempt to delete the created user
-          await adminClient.deleteUser(userId);
+          await client.auth.admin.deleteUser(userId);
 
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -277,7 +340,7 @@ export default router({
         }
 
         // Step 3: Set user profile to require password change on first login
-        await adminClient.updateUserById(userId, {
+        await client.auth.admin.updateUserById(userId, {
           user_metadata: {
             ...userData.user.user_metadata,
             require_password_change: true,
