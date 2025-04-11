@@ -1,13 +1,16 @@
 <template>
   <div>
-    <UBreadcrumb :links="[{ label: 'Home', to: '/' }, { label: 'Employees' }]" class="mb-6" />
-    
+    <UBreadcrumb
+      :links="[{ label: 'Home', to: '/' }, { label: 'Employees' }]"
+      class="mb-6"
+    />
+
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Employees</h1>
-      <UButton 
-        color="primary" 
-        icon="i-heroicons-user-plus" 
-        to="/auth/register"
+      <UButton
+        color="primary"
+        icon="i-heroicons-user-plus"
+        @click="openAddEmployeeModal"
       >
         Add Employee
       </UButton>
@@ -15,15 +18,25 @@
 
     <!-- Loading state -->
     <div v-if="isLoading" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-gray-400" />
+      <UIcon
+        name="i-heroicons-arrow-path"
+        class="w-8 h-8 animate-spin text-gray-400"
+      />
     </div>
 
     <!-- Empty state -->
-    <UCard v-else-if="employees.length === 0" class="p-12 flex flex-col items-center justify-center">
+    <UCard
+      v-else-if="employees.length === 0"
+      class="p-12 flex flex-col items-center justify-center"
+    >
       <UIcon name="i-heroicons-users" class="w-12 h-12 text-gray-400 mb-4" />
       <h3 class="text-lg font-medium mb-2">No employees found</h3>
-      <p class="text-gray-500 mb-6 text-center">Get started by adding your first employee.</p>
-      <UButton color="primary" to="/auth/register">Add Employee</UButton>
+      <p class="text-gray-500 mb-6 text-center">
+        Get started by adding your first employee.
+      </p>
+      <UButton color="primary" @click="openAddEmployeeModal"
+        >Add Employee</UButton
+      >
     </UCard>
 
     <!-- Data table -->
@@ -32,15 +45,39 @@
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead>
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hire Date</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Employee
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Department
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Job Title
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Hire Date
+              </th>
+              <th
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-for="employee in employees" :key="employee.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+            <tr
+              v-for="employee in employees"
+              :key="employee.id"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <UAvatar
@@ -48,41 +85,51 @@
                     size="sm"
                     :ui="{
                       base: 'bg-blue-500 text-white',
-                      ring: 'ring-2 ring-white/20'
+                      ring: 'ring-2 ring-white/20',
                     }"
                   />
                   <div class="ml-3">
-                    <div class="font-medium">{{ employee.first_name }} {{ employee.last_name }}</div>
-                    <div class="text-sm text-gray-500">{{ employee.email }}</div>
+                    <div class="font-medium">
+                      {{ employee.first_name }} {{ employee.last_name }}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      {{ employee.email }}
+                    </div>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <UBadge v-if="employee.department_name" color="blue" variant="soft">
+                <UBadge
+                  v-if="employee.department_name"
+                  color="blue"
+                  variant="soft"
+                >
                   {{ employee.department_name }}
                 </UBadge>
                 <span v-else class="text-gray-500 text-sm">Not assigned</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm">{{ employee.job_title || 'Not specified' }}</div>
+                <div class="text-sm">
+                  {{ employee.job_title || "Not specified" }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm">{{ formatDate(employee.hire_date) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                 <div class="flex justify-end space-x-2">
-                  <UButton 
-                    color="gray" 
-                    variant="ghost" 
-                    icon="i-heroicons-pencil-square" 
+                  <UButton
+                    color="gray"
+                    variant="ghost"
+                    icon="i-heroicons-pencil-square"
                     size="xs"
                     @click="editEmployeeProfile(employee)"
                   />
-                  <UButton 
-                    color="blue" 
-                    variant="ghost" 
-                    icon="i-heroicons-eye" 
-                    size="xs" 
+                  <UButton
+                    color="blue"
+                    variant="ghost"
+                    icon="i-heroicons-eye"
+                    size="xs"
                     :to="`/employees/${employee.id}`"
                   />
                 </div>
@@ -95,13 +142,27 @@
 
     <!-- Edit Employee Profile Modal -->
     <UModal v-model="isModalOpen" :ui="{ width: 'md:max-w-2xl' }">
-      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
+      <UCard
+        :ui="{
+          ring: '',
+          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
+        }"
+      >
         <template #header>
           <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+            <h3
+              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+            >
               Edit Employee Profile
             </h3>
-            <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark" class="-my-1" aria-label="Close" @click="isModalOpen = false" />
+            <UButton
+              color="gray"
+              variant="ghost"
+              icon="i-heroicons-x-mark"
+              class="-my-1"
+              aria-label="Close"
+              @click="isModalOpen = false"
+            />
           </div>
         </template>
 
@@ -109,58 +170,85 @@
           <!-- Basic Info Section -->
           <div class="flex items-center mb-6">
             <UAvatar
-              :text="getInitials(selectedEmployee?.first_name, selectedEmployee?.last_name)"
+              :text="
+                getInitials(
+                  selectedEmployee?.first_name,
+                  selectedEmployee?.last_name
+                )
+              "
               size="lg"
               :ui="{
                 base: 'bg-blue-500 text-white',
-                ring: 'ring-2 ring-white/20'
+                ring: 'ring-2 ring-white/20',
               }"
             />
             <div class="ml-4">
-              <div class="text-lg font-medium">{{ selectedEmployee?.first_name }} {{ selectedEmployee?.last_name }}</div>
-              <div class="text-sm text-gray-500">{{ selectedEmployee?.email }}</div>
+              <div class="text-lg font-medium">
+                {{ selectedEmployee?.first_name }}
+                {{ selectedEmployee?.last_name }}
+              </div>
+              <div class="text-sm text-gray-500">
+                {{ selectedEmployee?.email }}
+              </div>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Department -->
             <UFormGroup label="Department" name="departmentId">
-              <USelectMenu v-model="form.departmentId" :options="departmentOptions" placeholder="Select a department" />
+              <USelectMenu
+                v-model="form.departmentId"
+                :options="departmentOptions"
+                placeholder="Select a department"
+              />
             </UFormGroup>
-            
+
             <!-- Job Title -->
             <UFormGroup label="Job Title" name="jobTitle">
               <UInput v-model="form.jobTitle" placeholder="Enter job title" />
             </UFormGroup>
-            
+
             <!-- Hire Date -->
             <UFormGroup label="Hire Date" name="hireDate">
               <UInput v-model="form.hireDate" type="date" />
             </UFormGroup>
-            
+
             <!-- Manager -->
             <UFormGroup label="Manager" name="managerId">
-              <USelectMenu v-model="form.managerId" :options="managerOptions" placeholder="Select a manager" />
+              <USelectMenu
+                v-model="form.managerId"
+                :options="managerOptions"
+                placeholder="Select a manager"
+              />
             </UFormGroup>
-            
+
             <!-- Phone -->
             <UFormGroup label="Phone" name="phone">
               <UInput v-model="form.phone" placeholder="Enter phone number" />
             </UFormGroup>
-            
+
             <!-- Address -->
             <UFormGroup label="Address" name="address">
               <UInput v-model="form.address" placeholder="Enter address" />
             </UFormGroup>
           </div>
-          
+
           <!-- Bio -->
           <UFormGroup label="Bio" name="bio">
-            <UTextarea v-model="form.bio" placeholder="Enter employee bio" rows="3" />
+            <UTextarea
+              v-model="form.bio"
+              placeholder="Enter employee bio"
+              rows="3"
+            />
           </UFormGroup>
 
           <div class="flex justify-end space-x-2 mt-6">
-            <UButton type="button" color="gray" variant="ghost" @click="isModalOpen = false">
+            <UButton
+              type="button"
+              color="gray"
+              variant="ghost"
+              @click="isModalOpen = false"
+            >
               Cancel
             </UButton>
             <UButton type="submit" color="primary" :loading="isSubmitting">
@@ -170,19 +258,171 @@
         </UForm>
       </UCard>
     </UModal>
+
+    <!-- Add New Employee Modal -->
+    <UModal v-model="isAddModalOpen" :ui="{ width: 'md:max-w-2xl' }">
+      <UCard
+        :ui="{
+          ring: '',
+          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
+        }"
+      >
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3
+              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+            >
+              Add New Employee
+            </h3>
+            <UButton
+              color="gray"
+              variant="ghost"
+              icon="i-heroicons-x-mark"
+              class="-my-1"
+              aria-label="Close"
+              @click="isAddModalOpen = false"
+            />
+          </div>
+        </template>
+
+        <UForm
+          :schema="newEmployeeSchema"
+          :state="newEmployeeForm"
+          @submit="submitNewEmployeeForm"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- First Name -->
+            <UFormGroup label="First Name" name="firstName" required>
+              <UInput
+                v-model="newEmployeeForm.firstName"
+                placeholder="Enter first name"
+              />
+            </UFormGroup>
+
+            <!-- Last Name -->
+            <UFormGroup label="Last Name" name="lastName" required>
+              <UInput
+                v-model="newEmployeeForm.lastName"
+                placeholder="Enter last name"
+              />
+            </UFormGroup>
+
+            <!-- Email -->
+            <UFormGroup label="Email" name="email" required>
+              <UInput
+                v-model="newEmployeeForm.email"
+                type="email"
+                placeholder="Enter email address"
+              />
+            </UFormGroup>
+
+            <!-- Department -->
+            <UFormGroup label="Department" name="departmentId">
+              <USelectMenu
+                v-model="newEmployeeForm.departmentId"
+                :options="departmentOptions"
+                placeholder="Select a department"
+              />
+            </UFormGroup>
+
+            <!-- Job Title -->
+            <UFormGroup label="Job Title" name="jobTitle">
+              <UInput
+                v-model="newEmployeeForm.jobTitle"
+                placeholder="Enter job title"
+              />
+            </UFormGroup>
+
+            <!-- Hire Date -->
+            <UFormGroup label="Hire Date" name="hireDate">
+              <UInput v-model="newEmployeeForm.hireDate" type="date" />
+            </UFormGroup>
+
+            <!-- Manager -->
+            <UFormGroup label="Manager" name="managerId">
+              <USelectMenu
+                v-model="newEmployeeForm.managerId"
+                :options="managerOptions"
+                placeholder="Select a manager"
+              />
+            </UFormGroup>
+
+            <!-- Phone -->
+            <UFormGroup label="Phone" name="phone">
+              <UInput
+                v-model="newEmployeeForm.phone"
+                placeholder="Enter phone number"
+              />
+            </UFormGroup>
+
+            <!-- Address -->
+            <UFormGroup label="Address" name="address">
+              <UInput
+                v-model="newEmployeeForm.address"
+                placeholder="Enter address"
+              />
+            </UFormGroup>
+          </div>
+
+          <!-- Bio -->
+          <UFormGroup label="Bio" name="bio">
+            <UTextarea
+              v-model="newEmployeeForm.bio"
+              placeholder="Enter employee bio"
+              rows="3"
+            />
+          </UFormGroup>
+
+          <div class="mt-4 text-sm text-gray-500">
+            <p>
+              A default password of "Password123" will be set. The employee will
+              be prompted to change it on first login.
+            </p>
+          </div>
+
+          <div class="flex justify-end space-x-2 mt-6">
+            <UButton
+              type="button"
+              color="gray"
+              variant="ghost"
+              @click="isAddModalOpen = false"
+            >
+              Cancel
+            </UButton>
+            <UButton type="submit" color="primary" :loading="isAddSubmitting">
+              Create Employee
+            </UButton>
+          </div>
+        </UForm>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { z } from 'zod';
+import { z } from "zod";
 
 // Define page metadata
 definePageMeta({
-  auth: true
+  auth: true,
 });
 
 // Define schema for form validation
 const schema = z.object({
+  departmentId: z.string().optional().nullable(),
+  jobTitle: z.string().optional().nullable(),
+  hireDate: z.string().optional().nullable(),
+  managerId: z.string().optional().nullable(),
+  bio: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+});
+
+// Define schema for new employee form validation
+const newEmployeeSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
   departmentId: z.string().optional().nullable(),
   jobTitle: z.string().optional().nullable(),
   hireDate: z.string().optional().nullable(),
@@ -202,49 +442,61 @@ const departments = ref<any[]>([]);
 const managers = ref<any[]>([]);
 const isLoading = ref(true);
 const isModalOpen = ref(false);
+const isAddModalOpen = ref(false);
 const isSubmitting = ref(false);
+const isAddSubmitting = ref(false);
 const selectedEmployee = ref<any>(null);
 
 // Form state
 const form = reactive({
-  id: '',
+  id: "",
   departmentId: null as string | null,
-  jobTitle: '',
-  hireDate: '',
+  jobTitle: "",
+  hireDate: "",
   managerId: null as string | null,
-  bio: '',
-  phone: '',
-  address: ''
+  bio: "",
+  phone: "",
+  address: "",
+});
+
+// New employee form state
+const newEmployeeForm = reactive({
+  firstName: "",
+  lastName: "",
+  email: "",
+  departmentId: null as string | null,
+  jobTitle: "",
+  hireDate: "",
+  managerId: null as string | null,
+  bio: "",
+  phone: "",
+  address: "",
 });
 
 // Computed properties for select menus
 const departmentOptions = computed(() => {
   return [
-    { label: 'None', value: null },
-    ...departments.value.map(dept => ({
+    { label: "None", value: null },
+    ...departments.value.map((dept) => ({
       label: dept.name,
-      value: dept.id
-    }))
+      value: dept.id,
+    })),
   ];
 });
 
 const managerOptions = computed(() => {
   return [
-    { label: 'None', value: null },
-    ...managers.value.map(manager => ({
+    { label: "None", value: null },
+    ...managers.value.map((manager) => ({
       label: manager.name,
-      value: manager.id
-    }))
+      value: manager.id,
+    })),
   ];
 });
 
 // Fetch data on page load
 onMounted(async () => {
-  await Promise.all([
-    fetchEmployees(),
-    fetchDepartments(),
-    fetchManagers()
-  ]);
+  await Promise.all([fetchEmployees(), fetchDepartments(), fetchManagers()]);
 });
 
 // Method to fetch employees
@@ -253,11 +505,11 @@ async function fetchEmployees() {
     isLoading.value = true;
     employees.value = await $client.v1.employees.list.query();
   } catch (error: any) {
-    console.error('Error fetching employees:', error);
+    console.error("Error fetching employees:", error);
     toast.add({
-      title: 'Error',
-      description: error.message || 'Failed to load employees',
-      color: 'red'
+      title: "Error",
+      description: error.message || "Failed to load employees",
+      color: "red",
     });
   } finally {
     isLoading.value = false;
@@ -269,11 +521,11 @@ async function fetchDepartments() {
   try {
     departments.value = await $client.v1.departments.list.query();
   } catch (error: any) {
-    console.error('Error fetching departments:', error);
+    console.error("Error fetching departments:", error);
     toast.add({
-      title: 'Error',
-      description: 'Failed to load departments',
-      color: 'red'
+      title: "Error",
+      description: "Failed to load departments",
+      color: "red",
     });
   }
 }
@@ -283,35 +535,56 @@ async function fetchManagers() {
   try {
     managers.value = await $client.v1.employees.listForSelect.query();
   } catch (error: any) {
-    console.error('Error fetching managers:', error);
+    console.error("Error fetching managers:", error);
     toast.add({
-      title: 'Error',
-      description: 'Failed to load managers list',
-      color: 'red'
+      title: "Error",
+      description: "Failed to load managers list",
+      color: "red",
     });
   }
+}
+
+// Open add employee modal
+function openAddEmployeeModal() {
+  // Reset form
+  Object.assign(newEmployeeForm, {
+    firstName: "",
+    lastName: "",
+    email: "",
+    departmentId: null,
+    jobTitle: "",
+    hireDate: "",
+    managerId: null,
+    bio: "",
+    phone: "",
+    address: "",
+  });
+
+  isAddModalOpen.value = true;
 }
 
 // Open edit modal with employee data
 function editEmployeeProfile(employee: any) {
   selectedEmployee.value = employee;
-  
+
   form.id = employee.id;
   form.departmentId = employee.department_id;
-  form.jobTitle = employee.job_title || '';
-  form.hireDate = employee.hire_date ? formatDateForInput(employee.hire_date) : '';
+  form.jobTitle = employee.job_title || "";
+  form.hireDate = employee.hire_date
+    ? formatDateForInput(employee.hire_date)
+    : "";
   form.managerId = employee.manager_id;
-  form.bio = employee.bio || '';
-  form.phone = employee.phone || '';
-  form.address = employee.address || '';
-  
+  form.bio = employee.bio || "";
+  form.phone = employee.phone || "";
+  form.address = employee.address || "";
+
   isModalOpen.value = true;
 }
 
 // Submit form to update employee profile
 async function submitForm() {
   isSubmitting.value = true;
-  
+
   try {
     await $client.v1.employees.updateProfile.mutate({
       id: form.id,
@@ -321,45 +594,85 @@ async function submitForm() {
       managerId: form.managerId,
       bio: form.bio,
       phone: form.phone,
-      address: form.address
+      address: form.address,
     });
-    
+
     toast.add({
-      title: 'Success',
-      description: 'Employee profile updated successfully',
-      color: 'green'
+      title: "Success",
+      description: "Employee profile updated successfully",
+      color: "green",
     });
-    
+
     // Close modal and refresh data
     isModalOpen.value = false;
     await fetchEmployees();
-    
   } catch (error: any) {
-    console.error('Error updating employee profile:', error);
+    console.error("Error updating employee profile:", error);
     toast.add({
-      title: 'Error',
-      description: error.message || 'Failed to update employee profile',
-      color: 'red'
+      title: "Error",
+      description: error.message || "Failed to update employee profile",
+      color: "red",
     });
   } finally {
     isSubmitting.value = false;
   }
 }
 
+// Submit form to create new employee
+async function submitNewEmployeeForm() {
+  isAddSubmitting.value = true;
+
+  try {
+    await $client.v1.employees.create.mutate({
+      firstName: newEmployeeForm.firstName,
+      lastName: newEmployeeForm.lastName,
+      email: newEmployeeForm.email,
+      departmentId: newEmployeeForm.departmentId,
+      jobTitle: newEmployeeForm.jobTitle,
+      hireDate: newEmployeeForm.hireDate,
+      managerId: newEmployeeForm.managerId,
+      bio: newEmployeeForm.bio,
+      phone: newEmployeeForm.phone,
+      address: newEmployeeForm.address,
+    });
+
+    toast.add({
+      title: "Success",
+      description: "New employee created successfully",
+      color: "green",
+    });
+
+    // Close modal and refresh data
+    isAddModalOpen.value = false;
+    await fetchEmployees();
+  } catch (error: any) {
+    console.error("Error creating new employee:", error);
+    toast.add({
+      title: "Error",
+      description: error.message || "Failed to create new employee",
+      color: "red",
+    });
+  } finally {
+    isAddSubmitting.value = false;
+  }
+}
+
 // Helper functions
 function getInitials(firstName: string, lastName: string) {
-  return `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase();
+  return `${(firstName || "")[0] || ""}${
+    (lastName || "")[0] || ""
+  }`.toUpperCase();
 }
 
 function formatDate(dateString: string | null) {
-  if (!dateString) return 'Not set';
+  if (!dateString) return "Not set";
   return new Date(dateString).toLocaleDateString();
 }
 
 function formatDateForInput(dateString: string) {
-  if (!dateString) return '';
+  if (!dateString) return "";
   const date = new Date(dateString);
   // Format as YYYY-MM-DD for input[type="date"]
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 </script>
