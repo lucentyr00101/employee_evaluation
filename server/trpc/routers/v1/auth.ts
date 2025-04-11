@@ -9,6 +9,8 @@ import type { inferProcedureInput } from '@trpc/server';
 // Define input types
 type LoginInput = z.infer<typeof loginSchema>;
 type RegisterInput = z.infer<typeof registerSchema>;
+type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
 // Define validation schemas
 const loginSchema = z.object({
@@ -25,6 +27,25 @@ const registerSchema = z.object({
     .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Must contain at least one number')
+});
+
+const updateProfileSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email').optional(),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number'),
+  confirmPassword: z.string().min(1, 'Please confirm your password')
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export default router({
@@ -142,6 +163,86 @@ export default router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error.message || 'Failed to logout'
+        });
+      }
+    }),
+
+  // Update profile endpoint - accessible only to authenticated users
+  updateProfile: authorizedProcedure
+    .input(updateProfileSchema)
+    .mutation(async ({ input, ctx }: { input: UpdateProfileInput, ctx: Context & { user: any } }) => {
+      try {
+        const client = await serverSupabaseClient(ctx.event);
+        
+        // Update user metadata
+        const { error } = await client.auth.updateUser({
+          data: {
+            first_name: input.firstName,
+            last_name: input.lastName
+          }
+        });
+
+        if (error) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: error.message
+          });
+        }
+
+        return {
+          success: true,
+          message: 'Profile updated successfully'
+        };
+      } catch (error: any) {
+        console.error('Update Profile Error:', error);
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: error.message || 'Failed to update profile'
+        });
+      }
+    }),
+
+  // Change password endpoint - accessible only to authenticated users
+  changePassword: authorizedProcedure
+    .input(changePasswordSchema)
+    .mutation(async ({ input, ctx }: { input: ChangePasswordInput, ctx: Context & { user: any } }) => {
+      try {
+        const client = await serverSupabaseClient(ctx.event);
+
+        // First verify current password by trying to sign in
+        const { error: signInError } = await client.auth.signInWithPassword({
+          email: ctx.user.email,
+          password: input.currentPassword
+        });
+
+        if (signInError) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Current password is incorrect'
+          });
+        }
+
+        // Update the password
+        const { error } = await client.auth.updateUser({
+          password: input.newPassword
+        });
+
+        if (error) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: error.message
+          });
+        }
+
+        return {
+          success: true,
+          message: 'Password changed successfully'
+        };
+      } catch (error: any) {
+        console.error('Change Password Error:', error);
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: error.message || 'Failed to change password'
         });
       }
     }),
