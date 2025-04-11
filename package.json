@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "setup-mock-data": "tsx server/db/setup-mock-data.ts"
+    "setup-mock-data": "tsx server/db/setup-mock-data.ts",
+    "reset-database": "tsx server/db/reset-database.ts"
   },
   "dependencies": {
     "@nuxt/ui": "^2.21.1",

@@ -37,49 +37,89 @@ const mockUsers = [
     id: '00000000-0000-0000-0000-000000000001',
     email: 'admin@example.com',
     password: 'password123',
-    user_metadata: { role: 'admin', full_name: 'Admin User' }
+    user_metadata: { 
+      role: 'admin', 
+      full_name: 'Admin User',
+      first_name: 'Admin',
+      last_name: 'User'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000002',
     email: 'engineering.manager@example.com',
     password: 'password123',
-    user_metadata: { role: 'manager', full_name: 'Engineering Manager' }
+    user_metadata: { 
+      role: 'manager', 
+      full_name: 'Engineering Manager',
+      first_name: 'Engineering',
+      last_name: 'Manager'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000003',
     email: 'marketing.manager@example.com',
     password: 'password123',
-    user_metadata: { role: 'manager', full_name: 'Marketing Manager' }
+    user_metadata: { 
+      role: 'manager', 
+      full_name: 'Marketing Manager',
+      first_name: 'Marketing',
+      last_name: 'Manager'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000004',
     email: 'developer1@example.com',
     password: 'password123',
-    user_metadata: { role: 'employee', full_name: 'Developer One' }
+    user_metadata: { 
+      role: 'employee', 
+      full_name: 'Developer One',
+      first_name: 'Developer',
+      last_name: 'One'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000005',
     email: 'developer2@example.com',
     password: 'password123',
-    user_metadata: { role: 'employee', full_name: 'Developer Two' }
+    user_metadata: { 
+      role: 'employee', 
+      full_name: 'Developer Two',
+      first_name: 'Developer',
+      last_name: 'Two'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000006',
     email: 'marketing1@example.com',
     password: 'password123',
-    user_metadata: { role: 'employee', full_name: 'Marketing Specialist' }
+    user_metadata: { 
+      role: 'employee', 
+      full_name: 'Marketing Specialist',
+      first_name: 'Marketing',
+      last_name: 'Specialist'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000007',
     email: 'marketing2@example.com',
     password: 'password123',
-    user_metadata: { role: 'employee', full_name: 'Content Creator' }
+    user_metadata: { 
+      role: 'employee', 
+      full_name: 'Content Creator',
+      first_name: 'Content',
+      last_name: 'Creator'
+    }
   },
   {
     id: '00000000-0000-0000-0000-000000000008',
     email: 'designer@example.com',
     password: 'password123',
-    user_metadata: { role: 'employee', full_name: 'UX Designer' }
+    user_metadata: { 
+      role: 'employee', 
+      full_name: 'UX Designer',
+      first_name: 'UX',
+      last_name: 'Designer'
+    }
   }
 ]
 
