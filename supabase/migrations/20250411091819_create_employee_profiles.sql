@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.employee_profiles (
     bio TEXT,
     phone VARCHAR(50),
     address TEXT,
+    is_admin BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

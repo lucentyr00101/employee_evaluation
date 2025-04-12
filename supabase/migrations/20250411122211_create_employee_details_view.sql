@@ -13,6 +13,7 @@ SELECT
   p.bio,
   p.phone,
   p.address,
+  p.is_admin,
   p.created_at,
   p.updated_at
 FROM 

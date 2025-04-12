@@ -5,10 +5,49 @@ import {
   guestProcedure,
   publicProcedure,
 } from "~/server/trpc/procedures/authorized";
-import { serverSupabaseClient } from "#supabase/server";
+import {
+  serverSupabaseClient,
+  serverSupabaseServiceRole,
+} from "#supabase/server";
 import { TRPCError } from "@trpc/server";
 import { Context } from "~/server/trpc/context";
 import type { inferProcedureInput } from "@trpc/server";
+
+// Define database types for TypeScript
+interface Database {
+  public: {
+    Tables: {
+      employee_profiles: {
+        Row: {
+          id: string;
+          department_id: string | null;
+          job_title: string | null;
+          hire_date: string | null;
+          manager_id: string | null;
+          bio: string | null;
+          phone: string | null;
+          address: string | null;
+          is_admin: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          department_id?: string | null;
+          job_title?: string | null;
+          hire_date?: string | null;
+          manager_id?: string | null;
+          bio?: string | null;
+          phone?: string | null;
+          address?: string | null;
+          is_admin: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+    };
+  };
+}
 
 // Define input types
 type LoginInput = z.infer<typeof loginSchema>;
@@ -100,15 +139,16 @@ export default router({
         ctx: Context;
       }): Promise<any> => {
         try {
-          const client = await serverSupabaseClient(ctx.event);
-          const { data: authData, error } = await client.auth.signUp({
+          const client = await serverSupabaseServiceRole<Database>(ctx.event);
+
+          // Create user in auth system
+          const { data: authData, error } = await client.auth.admin.createUser({
             email: input.email,
             password: input.password,
-            options: {
-              data: {
-                first_name: input.firstName,
-                last_name: input.lastName,
-              },
+            email_confirm: true,
+            user_metadata: {
+              first_name: input.firstName,
+              last_name: input.lastName,
             },
           });
 
@@ -120,17 +160,33 @@ export default router({
             });
           }
 
-          if (!authData.user) {
-            return {
-              session: null,
-              user: null,
-              message: "Please check your email to confirm your registration",
-            };
+          if (!authData?.user) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create user account",
+            });
+          }
+
+          // Create employee profile with is_admin=false by default
+          const { error: profileError } = await client
+            .from("employee_profiles")
+            .insert({
+              id: authData.user.id,
+              is_admin: false,
+            } satisfies Database["public"]["Tables"]["employee_profiles"]["Insert"]);
+
+          if (profileError) {
+            // If profile creation fails, attempt to delete the created user
+            await client.auth.admin.deleteUser(authData.user.id);
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: profileError.message,
+            });
           }
 
           return {
-            session: authData.session,
             user: authData.user,
+            message: "Registration successful",
           };
         } catch (error: any) {
           console.error("Registration Error:", error);
