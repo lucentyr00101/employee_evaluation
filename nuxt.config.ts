@@ -1,12 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   build: {
-    transpile: ['trpc-nuxt']
+    transpile: ["trpc-nuxt"],
   },
 
-  compatibilityDate: '2024-04-03',
+  compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
 
   postcss: {
     plugins: {
@@ -17,11 +17,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      SUPABASE_URL: process.env.SUPABASE_URL ?? '',
-      SUPABASE_KEY: process.env.SUPABASE_KEY ?? '',
-      SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD ?? '',
-      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
-    }
+      SUPABASE_URL: process.env.SUPABASE_URL ?? "",
+      SUPABASE_KEY: process.env.SUPABASE_KEY ?? "",
+      SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD ?? "",
+      SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ?? "",
+    },
   },
 
   supabase: {
@@ -30,10 +30,10 @@ export default defineNuxtConfig({
       auth: {
         detectSessionInUrl: false,
         autoRefreshToken: true,
-        flowType: 'implicit',
+        flowType: "implicit",
       },
     },
   },
 
-  modules: ['@nuxt/ui', '@nuxtjs/supabase', '@pinia/nuxt']
-})
+  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@pinia/nuxt"],
+});
