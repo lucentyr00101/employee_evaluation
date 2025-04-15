@@ -36,7 +36,18 @@
         <div class="flex items-center gap-3">
           <AvatarDropdown />
           <div class="min-w-0">
-            <p class="text-sm font-medium truncate">{{ userFullName }}</p>
+            <template v-if="user">
+              <p class="text-sm font-medium truncate">{{ userFullName }}</p>
+            </template>
+            <template v-else>
+              <div class="flex items-center">
+                <UIcon
+                  name="i-heroicons-arrow-path"
+                  class="animate-spin text-gray-400 mr-2"
+                />
+                <span class="text-sm text-gray-400">Loading...</span>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -50,7 +61,7 @@ import { useSessionStore } from "~/store/session";
 
 // Get user info from session store
 const sessionStore = useSessionStore();
-const { userFullName } = storeToRefs(sessionStore);
+const { userFullName, user } = storeToRefs(sessionStore);
 
 // Navigation links configuration
 const navigationLinks = computed(() => [
