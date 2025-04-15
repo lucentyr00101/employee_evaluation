@@ -140,124 +140,13 @@
       </div>
     </UCard>
 
-    <!-- Edit Employee Profile Modal -->
-    <UModal v-model="isModalOpen" :ui="{ width: 'md:max-w-2xl' }">
-      <UCard
-        :ui="{
-          ring: '',
-          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
-        }"
-      >
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3
-              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
-            >
-              Edit Employee Profile
-            </h3>
-            <UButton
-              color="gray"
-              variant="ghost"
-              icon="i-heroicons-x-mark"
-              class="-my-1"
-              aria-label="Close"
-              @click="isModalOpen = false"
-            />
-          </div>
-        </template>
-
-        <UForm :schema="schema" :state="form" @submit="submitForm">
-          <!-- Basic Info Section -->
-          <div class="flex items-center mb-6">
-            <UAvatar
-              :text="
-                getInitials(
-                  selectedEmployee?.first_name,
-                  selectedEmployee?.last_name
-                )
-              "
-              size="lg"
-              :ui="{
-                base: 'bg-blue-500 text-white',
-                ring: 'ring-2 ring-white/20',
-              }"
-            />
-            <div class="ml-4">
-              <div class="text-lg font-medium">
-                {{ selectedEmployee?.first_name }}
-                {{ selectedEmployee?.last_name }}
-              </div>
-              <div class="text-sm text-gray-500">
-                {{ selectedEmployee?.email }}
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Department -->
-            <UFormGroup label="Department" name="departmentId">
-              <USelectMenu
-                v-model="form.departmentId as any"
-                :options="departmentOptions"
-                placeholder="Select a department"
-              />
-            </UFormGroup>
-
-            <!-- Job Title -->
-            <UFormGroup label="Job Title" name="jobTitle">
-              <UInput v-model="form.jobTitle" placeholder="Enter job title" />
-            </UFormGroup>
-
-            <!-- Hire Date -->
-            <UFormGroup label="Hire Date" name="hireDate">
-              <UInput v-model="form.hireDate" type="date" />
-            </UFormGroup>
-
-            <!-- Manager -->
-            <UFormGroup label="Manager" name="managerId">
-              <USelectMenu
-                v-model="form.managerId as any"
-                :options="managerOptions"
-                placeholder="Select a manager"
-              />
-            </UFormGroup>
-
-            <!-- Phone -->
-            <UFormGroup label="Phone" name="phone">
-              <UInput v-model="form.phone" placeholder="Enter phone number" />
-            </UFormGroup>
-
-            <!-- Address -->
-            <UFormGroup label="Address" name="address">
-              <UInput v-model="form.address" placeholder="Enter address" />
-            </UFormGroup>
-          </div>
-
-          <!-- Bio -->
-          <UFormGroup label="Bio" name="bio">
-            <UTextarea
-              v-model="form.bio"
-              placeholder="Enter employee bio"
-              :rows="3"
-            />
-          </UFormGroup>
-
-          <div class="flex justify-end space-x-2 mt-6">
-            <UButton
-              type="button"
-              color="gray"
-              variant="ghost"
-              @click="isModalOpen = false"
-            >
-              Cancel
-            </UButton>
-            <UButton type="submit" color="primary" :loading="isSubmitting">
-              Save Changes
-            </UButton>
-          </div>
-        </UForm>
-      </UCard>
-    </UModal>
+    <EmployeesEditEmployeeModal
+      v-model="isModalOpen"
+      :employee="selectedEmployee"
+      :departments="departments"
+      :managers="managers"
+      @submit="fetchEmployees"
+    />
 
     <EmployeesAddEmployeeModal
       v-model="isAddModalOpen"
@@ -269,22 +158,9 @@
 </template>
 
 <script setup lang="ts">
-import { z } from "zod";
-
 // Define page metadata
 definePageMeta({
   auth: true,
-});
-
-// Define schema for form validation
-const schema = z.object({
-  departmentId: z.string().optional().nullable(),
-  jobTitle: z.string().optional().nullable(),
-  hireDate: z.string().optional().nullable(),
-  managerId: z.string().optional().nullable(),
-  bio: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
 });
 
 // Access tRPC client
@@ -298,41 +174,7 @@ const managers = ref<any[]>([]);
 const isLoading = ref(true);
 const isModalOpen = ref(false);
 const isAddModalOpen = ref(false);
-const isSubmitting = ref(false);
 const selectedEmployee = ref<any>(null);
-
-// Form state
-const form = reactive({
-  id: "",
-  departmentId: null as string | null,
-  jobTitle: "",
-  hireDate: "",
-  managerId: null as string | null,
-  bio: "",
-  phone: "",
-  address: "",
-});
-
-// Computed properties for select menus
-const departmentOptions = computed(() => {
-  return [
-    { label: "None", value: null },
-    ...departments.value.map((dept) => ({
-      label: dept.name,
-      value: dept.id,
-    })),
-  ];
-});
-
-const managerOptions = computed(() => {
-  return [
-    { label: "None", value: null },
-    ...managers.value.map((manager) => ({
-      label: manager.name,
-      value: manager.id,
-    })),
-  ];
-});
 
 // Fetch data on page load
 onMounted(async () => {
@@ -392,56 +234,7 @@ function openAddEmployeeModal() {
 // Open edit modal with employee data
 function editEmployeeProfile(employee: any) {
   selectedEmployee.value = employee;
-
-  form.id = employee.id;
-  form.departmentId = employee.department_id;
-  form.jobTitle = employee.job_title || "";
-  form.hireDate = employee.hire_date
-    ? formatDateForInput(employee.hire_date)
-    : "";
-  form.managerId = employee.manager_id;
-  form.bio = employee.bio || "";
-  form.phone = employee.phone || "";
-  form.address = employee.address || "";
-
   isModalOpen.value = true;
-}
-
-// Submit form to update employee profile
-async function submitForm() {
-  isSubmitting.value = true;
-
-  try {
-    await $client.v1.employees.updateProfile.mutate({
-      id: form.id,
-      departmentId: form.departmentId,
-      jobTitle: form.jobTitle,
-      hireDate: form.hireDate,
-      managerId: form.managerId,
-      bio: form.bio,
-      phone: form.phone,
-      address: form.address,
-    });
-
-    toast.add({
-      title: "Success",
-      description: "Employee profile updated successfully",
-      color: "green",
-    });
-
-    // Close modal and refresh data
-    isModalOpen.value = false;
-    await fetchEmployees();
-  } catch (error: any) {
-    console.error("Error updating employee profile:", error);
-    toast.add({
-      title: "Error",
-      description: error.message || "Failed to update employee profile",
-      color: "red",
-    });
-  } finally {
-    isSubmitting.value = false;
-  }
 }
 
 // Handle new employee submission
@@ -456,7 +249,7 @@ async function handleNewEmployee(employeeData: any) {
     });
 
     await fetchEmployees();
-    isAddModalOpen.value = false; // Only close on success
+    isAddModalOpen.value = false;
   } catch (error: any) {
     console.error("Error creating new employee:", error);
     toast.add({
@@ -464,7 +257,7 @@ async function handleNewEmployee(employeeData: any) {
       description: error.message || "Failed to create new employee",
       color: "red",
     });
-    throw error; // Re-throw the error to prevent the modal from closing
+    throw error;
   }
 }
 
@@ -478,12 +271,5 @@ function getInitials(firstName: string, lastName: string) {
 function formatDate(dateString: string | null) {
   if (!dateString) return "Not set";
   return new Date(dateString).toLocaleDateString();
-}
-
-function formatDateForInput(dateString: string) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  // Format as YYYY-MM-DD for input[type="date"]
-  return date.toISOString().split("T")[0];
 }
 </script>
